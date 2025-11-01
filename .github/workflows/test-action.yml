@@ -1,0 +1,19 @@
+name: Test Poke Actions
+
+on:
+  issues:
+    types: [opened, closed]
+
+jobs:
+  test-pokemon:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Run Poke Actions
+        uses: ./
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
