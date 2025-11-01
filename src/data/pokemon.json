@@ -1,0 +1,12 @@
+[
+  {
+    "id": 1,
+    "name": "Rowlet",
+    "sprite": "001.jpg"
+  },
+  {
+    "id": 2,
+    "name": "Wooper",
+    "sprite": "002.png"
+  }
+]

@@ -1,0 +1,13 @@
+name: "Poke Actions"
+description: "Fun github actions for poke devs"
+author: "Daniel Yuki"
+branding:
+  icon: 'git-commit'
+  color: 'red'
+inputs:
+  github_token:
+    description: "GitHub token for commenting on issues"
+    required: true
+runs:
+  using: "node20"
+  main: "dist/index.js"

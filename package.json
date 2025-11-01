@@ -1,14 +1,16 @@
 {
   "name": "poke-actions",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Fun github actions for poke devs",
+  "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc && ncc build lib/index.js -o dist --source-map --license licenses.txt",
+    "dev": "tsc --watch",
+    "package": "pnpm run build"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": ["github-actions", "pokemon", "issues", "fun"],
+  "author": "Daniel Yuki",
+  "license": "MIT",
   "dependencies": {
     "@actions/core": "^1.11.1",
     "@actions/github": "^6.0.1"
