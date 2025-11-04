@@ -48,7 +48,7 @@ function getRandomPokemon() {
 }
 /**
  * Generate the URL for a sprite hosted on GitHub
- * Format: https://raw.githubusercontent.com/owner/repo/main/assets/sprites/pokemon/regular/001.png
+ * Format: https://raw.githubusercontent.com/owner/repo/main/assets/pokemon/001.png
  */
 function getSpriteUrl(spriteName, repo, branch = 'main') {
     return `https://raw.githubusercontent.com/${repo}/${branch}/assets/pokemon/${spriteName}`;

@@ -16,7 +16,7 @@ export function getRandomPokemon(): Pokemon {
 
 /**
  * Generate the URL for a sprite hosted on GitHub
- * Format: https://raw.githubusercontent.com/owner/repo/main/assets/sprites/pokemon/regular/001.png
+ * Format: https://raw.githubusercontent.com/owner/repo/main/assets/pokemon/001.png
  */
 export function getSpriteUrl(spriteName: string, repo: string, branch: string = 'main'): string {
   return `https://raw.githubusercontent.com/${repo}/${branch}/assets/pokemon/${spriteName}`;
