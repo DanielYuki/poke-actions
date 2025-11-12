@@ -6,7 +6,7 @@ branding:
   color: 'red'
 inputs:
   github_token:
-    description: "GitHub token for commenting on issues"
+    description: "GitHub token for commenting on issues and pull requests"
     required: true
 runs:
   using: "node20"

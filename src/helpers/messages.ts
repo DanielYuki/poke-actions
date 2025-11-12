@@ -1,19 +1,32 @@
-/**
- * Message when an issue is opened
- * Mentions the issue creator as the one who "found" the Pokémon
- */
-export function getOpenedMessage(issuerUsername: string): string {
-  return `🌿 **@${issuerUsername} found a wild Pokémon!**`;
+// Issue Messages
+
+export function getIssueOpenedMessage(username: string): string {
+  return `🌿 **@${username} found a wild Pokémon!**`;
 }
 
-/**
- * Message when an issue is closed
- * Credits the closer as the one who caught the Pokémon
- */
-export function getClosedMessage(
-  closerUsername: string,
+export function getIssueClosedMessage(
+  username: string,
   pokemonName: string,
   spriteUrl: string
 ): string {
-  return `🎉 **Congratulations @${closerUsername}!**\n\nYou caught **${pokemonName}**!\n\n![${pokemonName}](${spriteUrl})`;
+  return `🎉 **Congratulations @${username}!**\n\nYou caught **${pokemonName}**!\n\n![${pokemonName}](${spriteUrl})`;
+}
+
+// Pull Request Messages
+
+export function getPROpenedMessage(username: string): string {
+  return `🌿 **@${username} found a wild Pokémon!**`;
+}
+
+export function getPRMergedMessage(
+  contributor: string,
+  pokemonName: string,
+  spriteUrl: string,
+  merger: string
+): string {
+  return `🎉 **Congratulations @${contributor}!**\n\nYou caught **${pokemonName}**!\n\n![${pokemonName}](${spriteUrl})\n\n_Merged by @${merger}_`;
+}
+
+export function getPRClosedMessage(username: string): string {
+  return `💨 **The Pokémon fled!** Better luck next time, @${username}!`;
 }

@@ -1,69 +1,131 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 import { getRandomPokemon, getSpriteUrl } from './helpers/pokemon';
-import { getOpenedMessage, getClosedMessage } from './helpers/messages';
+import {
+  getIssueOpenedMessage,
+  getIssueClosedMessage,
+  getPROpenedMessage,
+  getPRMergedMessage,
+  getPRClosedMessage
+} from './helpers/messages';
 
 async function run(): Promise<void> {
   try {
-    // Get inputs
     const token = core.getInput('github_token', { required: true });
     const octokit = github.getOctokit(token);
-    
-    // Get event context
     const context = github.context;
-    const issue = context.payload.issue;
-    
-    // Validate we're working with an issue event
-    if (!issue) {
-      core.setFailed('This action only works on issue events');
-      return;
-    }
-
-    const issueNumber = issue.number;
     const repo = context.repo;
     const repoFullName = `${repo.owner}/${repo.repo}`;
 
-    // Handle issue opened event
-    if (context.payload.action === 'opened') {
-      const issuerUsername = issue.user?.login;
+    // Handle issue events
+    if (context.eventName === 'issues') {
+      const issue = context.payload.issue;
       
-      if (!issuerUsername) {
-        core.warning('Could not determine issue creator username');
+      if (!issue) {
+        core.warning('Issue event triggered but no issue found in payload');
         return;
       }
 
-      // Post "found a wild pokemon" comment
-      await octokit.rest.issues.createComment({
-        ...repo,
-        issue_number: issueNumber,
-        body: getOpenedMessage(issuerUsername)
-      });
+      const issueNumber = issue.number;
+      const action = context.payload.action;
+
+      if (action === 'opened') {
+        const username = issue.user?.login;
+        
+        if (!username) {
+          core.warning('Could not determine issue creator username');
+          return;
+        }
+
+        await octokit.rest.issues.createComment({
+          ...repo,
+          issue_number: issueNumber,
+          body: getIssueOpenedMessage(username)
+        });
+        
+        core.info(`Posted opening comment on issue #${issueNumber} (found by @${username})`);
+      }
       
-      core.info(`Posted opening comment on issue #${issueNumber} (found by @${issuerUsername})`);
+      else if (action === 'closed') {
+        const username = issue.closed_by?.login || context.actor;
+        
+        if (!username) {
+          core.warning('Could not determine who closed the issue');
+          return;
+        }
+
+        const pokemon = getRandomPokemon();
+        const spriteUrl = getSpriteUrl(pokemon.sprite, repoFullName);
+        
+        await octokit.rest.issues.createComment({
+          ...repo,
+          issue_number: issueNumber,
+          body: getIssueClosedMessage(username, pokemon.name, spriteUrl)
+        });
+        
+        core.info(`Issue #${issueNumber} closed - @${username} caught ${pokemon.name}!`);
+      }
     }
-    
-    // Handle issue closed event
-    else if (context.payload.action === 'closed') {
-      // Get who closed the issue (the catcher)
-      const closerUsername = issue.closed_by?.login || context.actor;
+
+    // Handle pull request events
+    else if (context.eventName === 'pull_request') {
+      const pr = context.payload.pull_request;
       
-      if (!closerUsername) {
-        core.warning('Could not determine who closed the issue');
+      if (!pr) {
+        core.warning('Pull request event triggered but no PR found in payload');
         return;
       }
 
-      // Generate completely random pokemon
-      const pokemon = getRandomPokemon();
-      const spriteUrl = getSpriteUrl(pokemon.sprite, repoFullName);
+      const prNumber = pr.number;
+      const action = context.payload.action;
+
+      if (action === 'opened') {
+        const username = pr.user?.login;
+        
+        if (!username) {
+          core.warning('Could not determine PR author username');
+          return;
+        }
+
+        await octokit.rest.issues.createComment({
+          ...repo,
+          issue_number: prNumber,
+          body: getPROpenedMessage(username)
+        });
+        
+        core.info(`Posted opening comment on PR #${prNumber} (opened by @${username})`);
+      }
       
-      // Post congratulations comment with sprite
-      await octokit.rest.issues.createComment({
-        ...repo,
-        issue_number: issueNumber,
-        body: getClosedMessage(closerUsername, pokemon.name, spriteUrl)
-      });
-      
-      core.info(`Posted closing comment on issue #${issueNumber} - @${closerUsername} caught ${pokemon.name}!`);
+      else if (action === 'closed') {
+        const author = pr.user?.login;
+        
+        if (!author) {
+          core.warning('Could not determine PR author username');
+          return;
+        }
+
+        if (pr.merged === true) {
+          const merger = pr.merged_by?.login || context.actor;
+          const pokemon = getRandomPokemon();
+          const spriteUrl = getSpriteUrl(pokemon.sprite, repoFullName);
+          
+          await octokit.rest.issues.createComment({
+            ...repo,
+            issue_number: prNumber,
+            body: getPRMergedMessage(author, pokemon.name, spriteUrl, merger)
+          });
+          
+          core.info(`PR #${prNumber} merged - @${author} caught ${pokemon.name}! (merged by @${merger})`);
+        } else {
+          await octokit.rest.issues.createComment({
+            ...repo,
+            issue_number: prNumber,
+            body: getPRClosedMessage(author)
+          });
+          
+          core.info(`PR #${prNumber} closed without merge - Pokémon fled`);
+        }
+      }
     }
     
   } catch (error) {

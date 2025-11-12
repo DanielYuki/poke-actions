@@ -3,6 +3,8 @@ name: Test Poke Actions
 on:
   issues:
     types: [opened, closed]
+  pull_request:
+    types: [opened, closed]
 
 jobs:
   test-pokemon:
