@@ -1,4 +1,8 @@
-// Issue Messages
+// ? I believe there is a way to handle messages, but I'm not sure how to do it, and if it's a good idea.
+
+// ========================================
+// ISSUE MESSAGES
+// ========================================
 
 export function getIssueOpenedMessage(username: string): string {
   return `🌿 **@${username} found a wild Pokémon!**`;
@@ -12,7 +16,9 @@ export function getIssueClosedMessage(
   return `🎉 **Congratulations @${username}!**\n\nYou caught **${pokemonName}**!\n\n![${pokemonName}](${spriteUrl})`;
 }
 
-// Pull Request Messages
+// ========================================
+// PULL REQUEST MESSAGES
+// ========================================
 
 export function getPROpenedMessage(username: string): string {
   return `🌿 **@${username} found a wild Pokémon!**`;

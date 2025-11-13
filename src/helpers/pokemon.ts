@@ -1,3 +1,5 @@
+// Helper functions for handling pokemon data
+
 import pokemonData from '../data/pokemon.json';
 
 interface Pokemon {
@@ -9,6 +11,7 @@ interface Pokemon {
 /**
  * Get a completely random Pokémon from the available list
  */
+// TODO: Future - add rarity tiers for special Pokemon
 export function getRandomPokemon(): Pokemon {
   const randomIndex = Math.floor(Math.random() * pokemonData.length);
   return pokemonData[randomIndex];

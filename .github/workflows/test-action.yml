@@ -1,3 +1,5 @@
+# Self-testing workflow - runs the action on this repo to test functionality
+
 name: Test Poke Actions
 
 on:
