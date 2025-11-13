@@ -120,10 +120,10 @@ async function run(): Promise<void> {
           await octokit.rest.issues.createComment({
             ...repo,
             issue_number: prNumber,
-            body: getPRClosedMessage(author)
+            body: getPRClosedMessage()
           });
           
-          core.info(`PR #${prNumber} closed without merge - Pokémon fled`);
+          core.info(`PR #${prNumber} closed without merge - The wild pokémon fled`);
         }
       }
     }

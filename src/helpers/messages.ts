@@ -27,6 +27,6 @@ export function getPRMergedMessage(
   return `🎉 **Congratulations @${contributor}!**\n\nYou caught **${pokemonName}**!\n\n![${pokemonName}](${spriteUrl})\n\n_Merged by @${merger}_`;
 }
 
-export function getPRClosedMessage(username: string): string {
-  return `💨 **The Pokémon fled!** Better luck next time, @${username}!`;
+export function getPRClosedMessage(): string {
+  return `💨 **The wild pokémon fled!**`;
 }
