@@ -6,22 +6,33 @@ require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 
 "use strict";
 
+// ? I believe there is a way to handle messages, but I'm not sure how to do it, and if it's a good idea.
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getOpenedMessage = getOpenedMessage;
-exports.getClosedMessage = getClosedMessage;
-/**
- * Message when an issue is opened
- * Mentions the issue creator as the one who "found" the Pokémon
- */
-function getOpenedMessage(issuerUsername) {
-    return `🌿 **@${issuerUsername} found a wild Pokémon!**`;
+exports.getIssueOpenedMessage = getIssueOpenedMessage;
+exports.getIssueClosedMessage = getIssueClosedMessage;
+exports.getPROpenedMessage = getPROpenedMessage;
+exports.getPRMergedMessage = getPRMergedMessage;
+exports.getPRClosedMessage = getPRClosedMessage;
+// ========================================
+// ISSUE MESSAGES
+// ========================================
+function getIssueOpenedMessage(username) {
+    return `🌿 **@${username} found a wild Pokémon!**`;
 }
-/**
- * Message when an issue is closed
- * Credits the closer as the one who caught the Pokémon
- */
-function getClosedMessage(closerUsername, pokemonName, spriteUrl) {
-    return `🎉 **Congratulations @${closerUsername}!**\n\nYou caught **${pokemonName}**!\n\n![${pokemonName}](${spriteUrl})`;
+function getIssueClosedMessage(username, pokemonName, spriteUrl) {
+    return `🎉 **Congratulations @${username}!**\n\nYou caught **${pokemonName}**!\n\n![${pokemonName}](${spriteUrl})`;
+}
+// ========================================
+// PULL REQUEST MESSAGES
+// ========================================
+function getPROpenedMessage(username) {
+    return `🌿 **@${username} found a wild Pokémon!**`;
+}
+function getPRMergedMessage(contributor, pokemonName, spriteUrl, merger) {
+    return `🎉 **Congratulations @${contributor}!**\n\nYou caught **${pokemonName}**!\n\n![${pokemonName}](${spriteUrl})\n\n_Merged by @${merger}_`;
+}
+function getPRClosedMessage() {
+    return `💨 **The wild pokémon fled!**`;
 }
 
 
@@ -32,6 +43,7 @@ function getClosedMessage(closerUsername, pokemonName, spriteUrl) {
 
 "use strict";
 
+// Helper functions for handling pokemon data
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -42,6 +54,7 @@ const pokemon_json_1 = __importDefault(__nccwpck_require__(832));
 /**
  * Get a completely random Pokémon from the available list
  */
+// TODO: Future - add rarity tiers for special Pokemon
 function getRandomPokemon() {
     const randomIndex = Math.floor(Math.random() * pokemon_json_1.default.length);
     return pokemon_json_1.default[randomIndex];
@@ -102,53 +115,97 @@ const pokemon_1 = __nccwpck_require__(1296);
 const messages_1 = __nccwpck_require__(3949);
 async function run() {
     try {
-        // Get inputs
-        const token = core.getInput('github_token', { required: true });
+        const token = core.getInput("github_token", { required: true });
         const octokit = github.getOctokit(token);
-        // Get event context
         const context = github.context;
-        const issue = context.payload.issue;
-        // Validate we're working with an issue event
-        if (!issue) {
-            core.setFailed('This action only works on issue events');
-            return;
-        }
-        const issueNumber = issue.number;
         const repo = context.repo;
         const repoFullName = `${repo.owner}/${repo.repo}`;
-        // Handle issue opened event
-        if (context.payload.action === 'opened') {
-            const issuerUsername = issue.user?.login;
-            if (!issuerUsername) {
-                core.warning('Could not determine issue creator username');
+        // Handle issue events
+        if (context.eventName === "issues") {
+            const issue = context.payload.issue;
+            if (!issue) {
+                core.warning("Issue event triggered but no issue found in payload");
                 return;
             }
-            // Post "found a wild pokemon" comment
-            await octokit.rest.issues.createComment({
-                ...repo,
-                issue_number: issueNumber,
-                body: (0, messages_1.getOpenedMessage)(issuerUsername)
-            });
-            core.info(`Posted opening comment on issue #${issueNumber} (found by @${issuerUsername})`);
+            const issueNumber = issue.number;
+            const action = context.payload.action;
+            if (action === "opened") {
+                const username = issue.user?.login;
+                if (!username) {
+                    core.warning("Could not determine issue creator username");
+                    return;
+                }
+                await octokit.rest.issues.createComment({
+                    ...repo,
+                    issue_number: issueNumber,
+                    body: (0, messages_1.getIssueOpenedMessage)(username),
+                });
+                core.info(`Posted opening comment on issue #${issueNumber} (found by @${username})`);
+            }
+            else if (action === "closed") {
+                const username = issue.closed_by?.login || context.actor;
+                if (!username) {
+                    core.warning("Could not determine who closed the issue");
+                    return;
+                }
+                const pokemon = (0, pokemon_1.getRandomPokemon)();
+                const spriteUrl = (0, pokemon_1.getSpriteUrl)(pokemon.sprite, repoFullName);
+                await octokit.rest.issues.createComment({
+                    ...repo,
+                    issue_number: issueNumber,
+                    body: (0, messages_1.getIssueClosedMessage)(username, pokemon.name, spriteUrl),
+                });
+                core.info(`Issue #${issueNumber} closed - @${username} caught ${pokemon.name}!`);
+            }
         }
-        // Handle issue closed event
-        else if (context.payload.action === 'closed') {
-            // Get who closed the issue (the catcher)
-            const closerUsername = issue.closed_by?.login || context.actor;
-            if (!closerUsername) {
-                core.warning('Could not determine who closed the issue');
+        // Handle pull request events
+        else if (context.eventName === "pull_request") {
+            const pr = context.payload.pull_request;
+            if (!pr) {
+                core.warning("Pull request event triggered but no PR found in payload");
                 return;
             }
-            // Generate completely random pokemon
-            const pokemon = (0, pokemon_1.getRandomPokemon)();
-            const spriteUrl = (0, pokemon_1.getSpriteUrl)(pokemon.sprite, repoFullName);
-            // Post congratulations comment with sprite
-            await octokit.rest.issues.createComment({
-                ...repo,
-                issue_number: issueNumber,
-                body: (0, messages_1.getClosedMessage)(closerUsername, pokemon.name, spriteUrl)
-            });
-            core.info(`Posted closing comment on issue #${issueNumber} - @${closerUsername} caught ${pokemon.name}!`);
+            const prNumber = pr.number;
+            const action = context.payload.action;
+            if (action === "opened") {
+                const username = pr.user?.login;
+                if (!username) {
+                    core.warning("Could not determine PR author username");
+                    return;
+                }
+                await octokit.rest.issues.createComment({
+                    ...repo,
+                    issue_number: prNumber,
+                    body: (0, messages_1.getPROpenedMessage)(username),
+                });
+                core.info(`Posted opening comment on PR #${prNumber} (opened by @${username})`);
+            }
+            else if (action === "closed") {
+                const author = pr.user?.login;
+                if (!author) {
+                    core.warning("Could not determine PR author username");
+                    return;
+                }
+                if (pr.merged === true) {
+                    const merger = pr.merged_by?.login || context.actor;
+                    const pokemon = (0, pokemon_1.getRandomPokemon)();
+                    const spriteUrl = (0, pokemon_1.getSpriteUrl)(pokemon.sprite, repoFullName);
+                    await octokit.rest.issues.createComment({
+                        ...repo,
+                        issue_number: prNumber,
+                        body: (0, messages_1.getPRMergedMessage)(author, pokemon.name, spriteUrl, merger),
+                    });
+                    core.info(`PR #${prNumber} merged - @${author} caught ${pokemon.name}! (merged by @${merger})`);
+                }
+                else {
+                    await octokit.rest.issues.createComment({
+                        ...repo,
+                        issue_number: prNumber,
+                        body: (0, messages_1.getPRClosedMessage)(),
+                    });
+                    core.info(`PR #${prNumber} closed without merge - The wild pokémon fled`);
+                }
+            }
         }
     }
     catch (error) {
@@ -156,7 +213,7 @@ async function run() {
             core.setFailed(`Action failed: ${error.message}`);
         }
         else {
-            core.setFailed('Action failed with unknown error');
+            core.setFailed("Action failed with unknown error");
         }
     }
 }
