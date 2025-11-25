@@ -32,6 +32,7 @@ jobs:
   pokemon:
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       issues: write
       pull-requests: write
     steps:
