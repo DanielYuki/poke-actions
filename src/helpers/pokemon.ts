@@ -1,6 +1,6 @@
 // Helper functions for handling pokemon data
 
-import pokemonData from '../data/pokemon.json';
+import pokemonData from "../data/pokemon.json";
 
 interface Pokemon {
   id: number;
@@ -18,9 +18,9 @@ export function getRandomPokemon(): Pokemon {
 }
 
 /**
- * Generate the URL for a sprite hosted on GitHub
+ * ? Might pull images from a dedicated repo or database in the future
  * Format: https://raw.githubusercontent.com/owner/repo/main/assets/pokemon/001.png
  */
-export function getSpriteUrl(spriteName: string, repo: string, branch: string = 'main'): string {
-  return `https://raw.githubusercontent.com/${repo}/${branch}/assets/pokemon/${spriteName}`;
+export function getSpriteUrl(spriteName: string): string {
+  return `https://raw.githubusercontent.com/DanielYuki/poke-actions/main/assets/pokemon/${spriteName}`;
 }
